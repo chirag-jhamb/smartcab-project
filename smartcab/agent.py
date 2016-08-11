@@ -10,11 +10,35 @@ class LearningAgent(Agent):
         super(LearningAgent, self).__init__(env)  # sets self.env = env, state = None, next_waypoint = None, and a default color
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
+
         # TODO: Initialize any additional variables here
+        self.a = 0.5   # learning rate
+        self.gamma = 0.9   # discount factor
+        self.epsilon = 1   # epsilon greedy factor
+        self.Q_values = {} # key: state, value: {action: value}
+        self.trial_count = 0
+        self.rewards = 0
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
+
+    def get_action(self, state, epsilon):
+        #prepare to learn the actions and return each action's value
+        if state not in self.Q_values:
+            self.Q_values[state] = {None: 10, 'forward': 10, 'left': 10, 'right': 10}
+        if random.random() < epsilon:
+            return random.choice(self.env.valid_actions)
+        else:
+            return max(self.Q_values[state].items(), key=lambda x:x[1])[0]
+
+    def get_max_Q_value(self, state):
+        return max(self.Q_values[state].values()) if state in self.Q_values else 10
+
+    def learn_policy(self, state, action, reward, next_state):
+        #the main ingridient
+        self.Q_values[state][action] = (1 - self.a) * self.Q_values[state][action] + self.a * (reward + self.gamma * self.get_max_Q_value(next_state))
+
 
     def update(self, t):
         # Gather inputs
@@ -23,12 +47,26 @@ class LearningAgent(Agent):
         deadline = self.env.get_deadline(self)
 
         # TODO: Update state
-        
+        self.trial_count += 1
+        bool_for_left = (inputs['light'] == 'green') and (inputs['oncoming'] == None or inputs['oncoming'] == 'left')
+        bool_for_right = (inputs['light'] == 'green') or (inputs['left'] != 'forward')
+        self.state = (self.next_waypoint, inputs['light'], bool_for_left, bool_for_right)
+
         # TODO: Select action according to your policy
-        action = None
+        self.epsilon = 1 / float(self.trial_count + 1)
+        action = self.get_action(self.state, self.epsilon)
 
         # Execute action and get reward
         reward = self.env.act(self, action)
+        self.rewards += reward
+
+        # TODO: Learn policy based on state, action, reward
+        next_waypoint = self.planner.next_waypoint()
+        next_inputs = self.env.sense(self)
+        next_bool_for_left = (inputs['light'] == 'green') and (inputs['oncoming'] == None or inputs['oncoming'] == 'left')
+        next_bool_for_right = (inputs['light'] == 'green') or (inputs['left'] != 'forward')
+        next_state = (next_waypoint, next_inputs['light'], next_bool_for_left, next_bool_for_right)
+        self.learn_policy(self.state, action, reward, next_state)
 
         # TODO: Learn policy based on state, action, reward
 
@@ -45,7 +83,7 @@ def run():
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.5, display=True)  # create simulator (uses pygame when display=True, if available)
+    sim = Simulator(e, update_delay=0.0005, display=True)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
     sim.run(n_trials=100)  # run for a specified number of trials
