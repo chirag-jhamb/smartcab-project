@@ -34,7 +34,7 @@ class LearningAgent(Agent):
 
     def get_max_Q_value(self, state):
         return max(self.Q_values[state].values()) if state in self.Q_values else 10
-
+        
     def learn_policy(self, state, action, reward, next_state):
         #the main ingridient
         self.Q_values[state][action] = (1 - self.a) * self.Q_values[state][action] + self.a * (reward + self.gamma * self.get_max_Q_value(next_state))
@@ -63,8 +63,8 @@ class LearningAgent(Agent):
         # TODO: Learn policy based on state, action, reward
         next_waypoint = self.planner.next_waypoint()
         next_inputs = self.env.sense(self)
-        next_bool_for_left = (inputs['light'] == 'green') and (inputs['oncoming'] == None or inputs['oncoming'] == 'left')
-        next_bool_for_right = (inputs['light'] == 'green') or (inputs['left'] != 'forward')
+        next_bool_for_left = (next_inputs['light'] == 'green') and (next_inputs['oncoming'] == None or next_inputs['oncoming'] == 'left')
+        next_bool_for_right = (next_inputs['light'] == 'green') or (next_inputs['left'] != 'forward')
         next_state = (next_waypoint, next_inputs['light'], next_bool_for_left, next_bool_for_right)
         self.learn_policy(self.state, action, reward, next_state)
 
