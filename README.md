@@ -1,10 +1,9 @@
 # Project 4: Reinforcement Learning
 ## Train a Smartcab How to Drive
+![Cab](https://s3.amazonaws.com/accredible_api_evidence_items/previews/179293/large/1472036790603?1472035884)
+### Project-
+Applied reinforcement learning to build a simulated vehicle navigation agent. This project involved modeling a complex control problem in terms of limited available inputs, and designing a scheme to automatically learn an optimal driving strategy based on rewards and penalties.
 
-### Install
-
-This project requires **Python 2.7** with the [pygame](https://www.pygame.org/wiki/GettingStarted
-) library installed
 
 ### Code
 
